@@ -27,7 +27,7 @@ exploittab:Label("This Tab Comes With Useful Features.")
 
 -- buffer string
 local buffers = {}
-loadstring(game:HttpGet("https://pastebin.com/raw/8XJh7dzh"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Melanierr/Miscc/refs/heads/main/one.lua"))()
 repeat
     task.wait()
 until game.Lighting:FindFirstChild("BUFFERSTRINGS")
@@ -4221,4 +4221,4 @@ exploittab:Textbox("Goal Target", "Enter a number of goals to stop farming at.",
 end)
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Scripts/refs/heads/main/oldthingyep",true))()
-loadstring(game:HttpGet("https://pastebin.com/raw/rQMS2B9R",true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Melanierr/Miscc/refs/heads/main/two.lua",true))()
