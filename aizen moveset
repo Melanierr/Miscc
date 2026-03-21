@@ -3,8 +3,6 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local SoundService = game:GetService("SoundService")
 local Workspace = game:GetService("Workspace")
-
--- buffer string
 local buffers = {}
 loadstring(game:HttpGet("https://pastebin.com/raw/8XJh7dzh"))()
 repeat
@@ -14,8 +12,6 @@ for _, val in ipairs(game.Lighting:FindFirstChild("BUFFERSTRINGS"):GetChildren()
     buffers[val.Name] = val.Value
 end
 game.Lighting:FindFirstChild("BUFFERSTRINGS"):Destroy()
---
-
 local plr = Players.LocalPlayer
 local lastCast = 0
 local lastCast2 = 0
@@ -23,288 +19,302 @@ local lastCast3 = 0
 local cd1 = 7.5
 local cd2 = 1.5
 local cd3 = 1
-local fx = loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/other-shit/refs/heads/main/shot_move_fx", true))
-
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
+local fx = loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/other-shit/refs/heads/main/shot_move_fx", true))
 local spiritbombfx = "https://pastebin.com/raw/aZ3kAGQd"
-
 local names = {
-	"Kurohitsugi",
-	"Shunpō (Flashstep)",
-	"Hogyoku Shinka",
-	"Reiatsu."
+    "Kurohitsugi",
+    "Shunpō (Flashstep)",
+    "Hogyoku Shinka"
 }
-
+local function StartCooldownUI(slotNumber, duration)
+    local gui = plr:WaitForChild("PlayerGui", 5)
+    if not gui then return end
+    local hotbar = gui:FindFirstChild("Hotbar")
+    if not hotbar then return end
+    local backpack = hotbar:FindFirstChild("Backpack")
+    if not backpack then return end
+    local hb = backpack:FindFirstChild("Hotbar")
+    if not hb then return end
+    local skill = hb:FindFirstChild("skill" .. slotNumber)
+    if not skill then return end
+    local cdFrame = skill:FindFirstChild("Cooldown")
+    if not cdFrame then return end
+    cdFrame.Size = UDim2.new(1, 0, -1, 0)
+    cdFrame.Visible = true
+    local tween = TweenService:Create(
+        cdFrame,
+        TweenInfo.new(duration, Enum.EasingStyle.Linear),
+        {Size = UDim2.new(1, 0, 0, 0)}
+    )
+    tween:Play()
+    tween.Completed:Connect(function()
+        cdFrame.Visible = false
+    end)
+end
+local disabled = false
 task.spawn(function()
-	while true do
-		local hotbarGui = plr:FindFirstChild("PlayerGui")
-		if hotbarGui then
-			local hotbar = hotbarGui:FindFirstChild("Hotbar")
-			if hotbar and hotbar:FindFirstChild("Backpack") then
-				local backpackHotbar = hotbar.Backpack:FindFirstChild("Hotbar")
-				if backpackHotbar then
-					for i, name in ipairs(names) do
-						local skill = backpackHotbar:FindFirstChild("skill" .. i)
-						if skill and skill:FindFirstChild("Base") and skill.Base:FindFirstChild("ToolName") then
-							if skill.Base.ToolName.Text ~= name then
-								skill.Base.ToolName.Text = name
-							end
-						end
-					end
-					local skill5 = backpackHotbar:FindFirstChild("skill5")
-					if skill5 then skill5:Destroy() end
-					local skill1 = backpackHotbar:FindFirstChild("skill1")
-					if skill1 and skill1:FindFirstChild("Base") and skill1.Base:FindFirstChild("Reuse") then
-						skill1.Base.Reuse.Text = "Ball Only"
-					end
-					local skill2 = backpackHotbar:FindFirstChild("skill2")
-					if skill2 and skill2:FindFirstChild("Base") and skill2.Base:FindFirstChild("Reuse") then
-						skill2.Base.Reuse.Text = "Ball Only"
-					end
-					local skill3 = backpackHotbar:FindFirstChild("skill3")
-					if skill3 and skill3:FindFirstChild("Base") and skill3.Base:FindFirstChild("Reuse") then
-						skill3.Base.Reuse.Text = ""
-					end
-					local skill4 = backpackHotbar:FindFirstChild("skill4")
-					if skill4 and skill4:FindFirstChild("Base") and skill4.Base:FindFirstChild("Reuse") then
-						skill4.Base.Reuse.Text = "Awaken Only."
-					end
-					local tspecialer = backpackHotbar:FindFirstChild("Tspecialer")
-					if tspecialer then tspecialer:Destroy() end
-				end
-			end
-		end
-		task.wait(0.1)
-	end
+    while true do
+        if disabled then break end
+        local hotbarGui = plr:FindFirstChild("PlayerGui")
+        if hotbarGui then
+            local hotbar = hotbarGui:FindFirstChild("Hotbar")
+            if hotbar and hotbar:FindFirstChild("Backpack") then
+                local backpackHotbar = hotbar.Backpack:FindFirstChild("Hotbar")
+                if backpackHotbar then
+                    for i, name in ipairs(names) do
+                        local skill = backpackHotbar:FindFirstChild("skill" .. i)
+                        if skill and skill:FindFirstChild("Base") and skill.Base:FindFirstChild("ToolName") then
+                            if skill.Base.ToolName.Text ~= name then
+                                skill.Base.ToolName.Text = name
+                            end
+                        end
+                    end
+                    if backpackHotbar:FindFirstChild("skill4") then
+                        backpackHotbar.skill4:Destroy()
+                    end
+                    if backpackHotbar:FindFirstChild("skill5") then
+                        backpackHotbar.skill5:Destroy()
+                    end
+                    if backpackHotbar:FindFirstChild("Tspecialer") then
+                        backpackHotbar.Tspecialer:Destroy()
+                    end
+                    local skill1 = backpackHotbar:FindFirstChild("skill1")
+                    if skill1 and skill1:FindFirstChild("Base") and skill1.Base:FindFirstChild("Reuse") then
+                        skill1.Base.Reuse.Text = "Ball Only"
+                    end
+                    local skill2 = backpackHotbar:FindFirstChild("skill2")
+                    if skill2 and skill2:FindFirstChild("Base") and skill2.Base:FindFirstChild("Reuse") then
+                        skill2.Base.Reuse.Text = "Ball Only"
+                    end
+                    local skill3 = backpackHotbar:FindFirstChild("skill3")
+                    if skill3 and skill3:FindFirstChild("Base") and skill3.Base:FindFirstChild("Reuse") then
+                        skill3.Base.Reuse.Text = ""
+                    end
+                end
+            end
+        end
+        task.wait(0.1)
+    end
 end)
-
 local crowdSound = SoundService:FindFirstChild("football-crowd-3-69245")
 task.spawn(function()
-	while true do
-		if crowdSound then crowdSound.Volume = 0 end
-		task.wait()
-	end
+    while true do
+        if disabled then break end
+        if crowdSound then crowdSound.Volume = 0 end
+        task.wait()
+    end
 end)
-
 local theme = ReplicatedStorage.Resources.kaiser:FindFirstChild("kaiser theme")
 if theme and theme:IsA("Sound") then theme.SoundId = "rbxassetid://82371915006556" end
 local theme2 = ReplicatedStorage.Resources.isagi:FindFirstChild("theme")
 if theme2 and theme2:IsA("Sound") then theme2.SoundId = "rbxassetid://82371915006556" end
-
 UserInputService.InputBegan:Connect(function(input, gp)
-	if gp then return end
-
-	if input.KeyCode == Enum.KeyCode.One then
-		local char = plr.Character
-		local root = char and char:FindFirstChild("HumanoidRootPart")
-		if not char or not root then return end
-		local state = char:FindFirstChild("state")
-		local stun = state and state:FindFirstChild("stun")
-		if stun then
-			stun.Value = true
-			task.wait(0.03)
-			stun.Value = false
-		end
-		if tick() - lastCast < cd1 then return end
-		lastCast = tick()
-		fx()
-		task.wait(0.35)
-		local forward = (root.CFrame - root.Position).LookVector
-		ReplicatedStorage.ByteNetReliable:FireServer(
-			buffer.fromstring(buffers["base"]),
-			{ { "kick", 100, false, vector.create(forward.X, forward.Y + 0.3, forward.Z) } }
-		)
-	end
-
-if input.KeyCode == Enum.KeyCode.Two then
-local char = plr.Character
-local root = char and char:FindFirstChild("HumanoidRootPart")
-local humanoid = char and char:FindFirstChild("Humanoid")
-if not char or not root or not humanoid then return end
-
-local state = char:FindFirstChild("state")
-local stun = state and state:FindFirstChild("stun")
-if stun then
-    stun.Value = true
-    task.wait(0.03)
-    stun.Value = false
-end
-
-if tick() - lastCast2 < cd2 then return end
-lastCast2 = tick()
-
-local anim = Instance.new("Animation")
-anim.AnimationId = "rbxassetid://84063609284472"
-local track = humanoid:LoadAnimation(anim)
-track.Priority = Enum.AnimationPriority.Action4
-track:Play(0, 1, 1)
-track.TimePosition = 1.2
-
-local forward = root.CFrame.LookVector
-local targetPos = root.Position + forward * 75
-local raycastParams = RaycastParams.new()
-raycastParams.FilterDescendantsInstances = {char}
-raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-local result = Workspace:Raycast(root.Position, forward * 75, raycastParams)
-if result then targetPos = result.Position - forward * 1 end
-root.CFrame = CFrame.new(targetPos, targetPos + forward)
-
-local sound = Instance.new("Sound")
-sound.SoundId = "rbxassetid://108156899947106"
-sound.Volume = 10
-sound.Parent = root
-sound:Play()
-game:GetService("Debris"):AddItem(sound, 2)
-
-local Lighting = game:GetService("Lighting")
-local TweenService = game:GetService("TweenService")
-
-local cc = Lighting:FindFirstChild("DarkCC") or Instance.new("ColorCorrectionEffect")
-cc.Name = "DarkCC"
-cc.Parent = Lighting
-
-local originalBrightness = cc.Brightness
-local originalContrast = cc.Contrast
-local originalSaturation = cc.Saturation
-local originalTint = cc.TintColor
-
-local darkTween = TweenService:Create(cc, TweenInfo.new(0.225, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    Brightness = 0.2,
-    Contrast = 0.2,
-    Saturation = -0.3,
-    TintColor = Color3.fromRGB(0,0,0)
-})
-
-local restoreTween = TweenService:Create(cc, TweenInfo.new(0.325, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    Brightness = originalBrightness,
-    Contrast = originalContrast,
-    Saturation = originalSaturation,
-    TintColor = originalTint
-})
-
-darkTween:Play()
-darkTween.Completed:Connect(function() restoreTween:Play() end)
-
-local cam = Workspace.CurrentCamera
-local originalFOV = cam.FieldOfView
-local zoomIn = TweenService:Create(cam, TweenInfo.new(0.175, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {FieldOfView = originalFOV - 25})
-local zoomOut = TweenService:Create(cam, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {FieldOfView = originalFOV})
-zoomIn:Play()
-zoomIn.Completed:Connect(function() zoomOut:Play() end)
-end
-
-if input.KeyCode == Enum.KeyCode.Three then
-local char = plr.Character
-local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-if not char or not humanoid then return end
-local state = char:FindFirstChild("state")
-local stun = state and state:FindFirstChild("stun")
-if stun then
-    stun.Value = true
-    task.wait(0.03)
-    stun.Value = false
-end
-if tick() - lastCast3 < cd3 then return end
-lastCast3 = tick()
-cd3 = 35
-
-local boostSpeed = 90
-local originalSpeed = humanoid.WalkSpeed
-
-local function WalkSpeedChange()
-    if char and humanoid then humanoid.WalkSpeed = boostSpeed end
-end
-WalkSpeedChange()
-HumanModCons = HumanModCons or {}
-HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false)
-    or humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(WalkSpeedChange)
-HumanModCons.wsCA = (HumanModCons.wsCA and HumanModCons.wsCA:Disconnect() and false)
-    or plr.CharacterAdded:Connect(function(nChar)
-        char, humanoid = nChar, nChar:WaitForChild("Humanoid")
+    if gp then return end
+    if disabled then return end
+    if input.KeyCode == Enum.KeyCode.F4 then
+        disabled = true
+        return
+    end
+    if input.KeyCode == Enum.KeyCode.One then
+        local char = plr.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if not char or not root then return end
+        local state = char:FindFirstChild("state")
+        local stun = state and state:FindFirstChild("stun")
+        if stun then
+            stun.Value = true
+            task.wait(0.03)
+            stun.Value = false
+        end
+        if tick() - lastCast < cd1 then return end
+        lastCast = tick()
+        StartCooldownUI(1, cd1)
+        fx()
+        task.wait(0.35)
+        local forward = (root.CFrame - root.Position).LookVector
+        ReplicatedStorage.ByteNetReliable:FireServer(
+            buffer.fromstring(buffers["base"]),
+            { { "kick", 100, false, vector.create(forward.X, forward.Y + 0.3, forward.Z) } }
+        )
+    end
+    if input.KeyCode == Enum.KeyCode.Two then
+        local char = plr.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local humanoid = char and char:FindFirstChild("Humanoid")
+        if not char or not root or not humanoid then return end
+        local state = char:FindFirstChild("state")
+        local stun = state and state:FindFirstChild("stun")
+        if stun then
+            stun.Value = true
+            task.wait(0.03)
+            stun.Value = false
+        end
+        if tick() - lastCast2 < cd2 then return end
+        lastCast2 = tick()
+        StartCooldownUI(2, cd2)
+        local anim = Instance.new("Animation")
+        anim.AnimationId = "rbxassetid://84063609284472"
+        local track = humanoid:LoadAnimation(anim)
+        track.Priority = Enum.AnimationPriority.Action4
+        track:Play(0, 1, 1)
+        track.TimePosition = 1.2
+        local forward = root.CFrame.LookVector
+        local targetPos = root.Position + forward * 75
+        local raycastParams = RaycastParams.new()
+        raycastParams.FilterDescendantsInstances = {char, workspace:FindFirstChild("Hogyoku")}
+        raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+        local result = Workspace:Raycast(root.Position, forward * 75, raycastParams)
+        if result then targetPos = result.Position - forward * 1 end
+        root.CFrame = CFrame.new(targetPos, targetPos + forward)
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://108156899947106"
+        sound.Volume = 10
+        sound.Parent = root
+        sound:Play()
+        game:GetService("Debris"):AddItem(sound, 2)
+        local cc = Lighting:FindFirstChild("DarkCC") or Instance.new("ColorCorrectionEffect")
+        cc.Name = "DarkCC"
+        cc.Parent = Lighting
+        local originalBrightness = cc.Brightness
+        local originalContrast = cc.Contrast
+        local originalSaturation = cc.Saturation
+        local originalTint = cc.TintColor
+        local darkTween = TweenService:Create(cc, TweenInfo.new(0.225, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Brightness = 0.2,
+            Contrast = 0.2,
+            Saturation = -0.3,
+            TintColor = Color3.fromRGB(0,0,0)
+        })
+        local restoreTween = TweenService:Create(cc, TweenInfo.new(0.325, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Brightness = originalBrightness,
+            Contrast = originalContrast,
+            Saturation = originalSaturation,
+            TintColor = originalTint
+        })
+        darkTween:Play()
+        darkTween.Completed:Connect(function() restoreTween:Play() end)
+        local cam = Workspace.CurrentCamera
+        local originalFOV = cam.FieldOfView
+        local zoomIn = TweenService:Create(cam, TweenInfo.new(0.175, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {FieldOfView = originalFOV - 25})
+        local zoomOut = TweenService:Create(cam, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {FieldOfView = originalFOV})
+        zoomIn:Play()
+        zoomIn.Completed:Connect(function() zoomOut:Play() end)
+    end
+    if input.KeyCode == Enum.KeyCode.Three then
+        local char = plr.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        local humanoid = char and char:FindFirstChild("Humanoid")
+        local torso = char and (char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso"))
+        if not char or not root or not humanoid or not torso then return end
+        local state = char:FindFirstChild("state")
+        local stun = state and state:FindFirstChild("stun")
+        if stun then
+            stun.Value = true
+            task.wait(0.03)
+            stun.Value = false
+        end
+        if tick() - lastCast3 < cd3 then return end
+        lastCast3 = tick()
+        cd3 = 35
+        StartCooldownUI(3, cd3)
+        local boostSpeed = 90
+        local originalSpeed = humanoid.WalkSpeed
+        local function WalkSpeedChange()
+            if char and humanoid then humanoid.WalkSpeed = boostSpeed end
+        end
         WalkSpeedChange()
+        HumanModCons = HumanModCons or {}
         HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false)
             or humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(WalkSpeedChange)
-    end)
-
-local parts = humanoid.RigType == Enum.HumanoidRigType.R6 and {
-    "Head","Torso","HumanoidRootPart","Left Arm","Right Arm","Left Leg","Right Leg"
-} or {
-    "Head","UpperTorso","LowerTorso","HumanoidRootPart",
-    "LeftUpperArm","LeftLowerArm","LeftHand","RightUpperArm","RightLowerArm","RightHand",
-    "LeftUpperLeg","LeftLowerLeg","LeftFoot","RightUpperLeg","RightLowerLeg","RightFoot"
-}
-
-local effectSource = game:GetService("ReplicatedStorage").Resources.barou.allEffectBAROUAWKSTEAL.BigLightningThing:GetChildren()[3]:GetChildren()[13]
-local clones = {}
-
-for _, partName in ipairs(parts) do
-    local limb = char:FindFirstChild(partName)
-    if limb and limb:IsA("BasePart") then
-        local clone = effectSource:Clone()
-        local att = Instance.new("Attachment")
-        att.Name = "LightningAttach"
-        att.Parent = limb
-        clone.Parent = att
-        for _, d in ipairs(clone:GetDescendants()) do
-            if d:IsA("ParticleEmitter") or d:IsA("Beam") or d:IsA("Trail") then
-                d.Color = ColorSequence.new(Color3.fromRGB(255,255,0))
-                d.Enabled = true
-            elseif d:IsA("PointLight") or d:IsA("SpotLight") then
-                d.Color = Color3.fromRGB(255,255,0)
-                d.Brightness = 2
-            elseif d:IsA("Highlight") then
-                d.FillColor = Color3.fromRGB(255,255,0)
-                d.OutlineColor = Color3.fromRGB(255,255,0)
+        HumanModCons.wsCA = (HumanModCons.wsCA and HumanModCons.wsCA:Disconnect() and false)
+            or plr.CharacterAdded:Connect(function(nChar)
+                char, humanoid = nChar, nChar:WaitForChild("Humanoid")
+                WalkSpeedChange()
+                HumanModCons.wsLoop = (HumanModCons.wsLoop and HumanModCons.wsLoop:Disconnect() and false)
+                    or humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(WalkSpeedChange)
+            end)
+        local circle = Instance.new("Part")
+        circle.Name = "Hogyoku"
+        circle.Anchored = false
+        circle.CanCollide = false
+        circle.Shape = Enum.PartType.Ball
+        circle.Size = Vector3.new(1.2, 1.2, 1.2)
+        circle.Material = Enum.Material.Neon
+        circle.Color = Color3.fromRGB(255, 255, 255)
+        circle.Parent = workspace
+        local specialMesh = Instance.new("SpecialMesh")
+        specialMesh.MeshType = Enum.MeshType.Sphere
+        specialMesh.Scale = Vector3.new(0.9, 0.9, 0.9)
+        specialMesh.Parent = circle
+        local torsoCenter = torso.Position
+        local forward = torso.CFrame.LookVector
+        circle.CFrame = CFrame.lookAt(torsoCenter, torsoCenter + forward) * CFrame.new(0, 0, -torso.Size.Z/4)
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = torso
+        weld.Part1 = circle
+        weld.Parent = circle
+        local att = Instance.new("Attachment", circle)
+        local light = Instance.new("PointLight")
+        light.Color = Color3.fromRGB(255, 255, 255)
+        light.Brightness = 2
+        light.Range = 15
+        light.Parent = att
+        local pulseTween = TweenService:Create(circle,
+            TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+            {Transparency = 0.1}
+        )
+        local sizePulse = TweenService:Create(specialMesh,
+            TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+            {Scale = Vector3.new(1.1, 1.1, 0.55)}
+        )
+        pulseTween:Play()
+        sizePulse:Play()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://97586610555842"
+        sound.TimePosition = 4
+        sound.Volume = 5
+        sound.Parent = root
+        game:GetService("ContentProvider"):PreloadAsync({sound})
+        sound:Play()
+        game:GetService("Debris"):AddItem(sound, 6)
+        local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere", Lighting)
+        local originalDensity = atmosphere.Density
+        local originalColor = atmosphere.Color
+        local originalOffset = atmosphere.Offset
+        atmosphere.Density = 0
+        atmosphere.Color = originalColor
+        atmosphere.Offset = 0
+        local tweenIn = TweenService:Create(
+            atmosphere,
+            TweenInfo.new(0.75, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            { Density = 0.5, Color = Color3.new(0,0,0), Offset = 0 }
+        )
+        tweenIn:Play()
+        task.delay(20, function()
+            if humanoid and humanoid.Parent then
+                humanoid.WalkSpeed = originalSpeed
             end
-        end
-        table.insert(clones, clone)
+            if HumanModCons.wsLoop then
+                HumanModCons.wsLoop:Disconnect()
+                HumanModCons.wsLoop = nil
+            end
+            if HumanModCons.wsCA then
+                HumanModCons.wsCA:Disconnect()
+                HumanModCons.wsCA = nil
+            end
+            if circle then
+                pulseTween:Cancel()
+                sizePulse:Cancel()
+                circle:Destroy()
+            end
+            local tweenOut = TweenService:Create(
+                atmosphere,
+                TweenInfo.new(0.75, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { Density = originalDensity, Color = originalColor, Offset = originalOffset }
+            )
+            tweenOut:Play()
+        end)
     end
-end
-
-local Lighting = game:GetService("Lighting")
-local TweenService = game:GetService("TweenService")
-local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
-if not atmosphere then
-    atmosphere = Instance.new("Atmosphere")
-    atmosphere.Parent = Lighting
-end
-local originalDensity = atmosphere.Density
-local originalColor = atmosphere.Color
-local originalOffset = atmosphere.Offset
-
-atmosphere.Density = 0
-atmosphere.Color = originalColor
-atmosphere.Offset = 0
-
-local sound = Instance.new("Sound")
-sound.SoundId = "rbxassetid://97586610555842"
-sound.TimePosition = 4
-sound.Volume = 5
-sound.Parent = char:FindFirstChild("HumanoidRootPart") or char
-game:GetService("ContentProvider"):PreloadAsync({sound})
-sound:Play()
-game:GetService("Debris"):AddItem(sound, 6)
-
-local tweenIn = TweenService:Create(
-    atmosphere,
-    TweenInfo.new(0.75, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-    { Density = 0.5, Color = Color3.new(0,0,0), Offset = 0 }
-)
-tweenIn:Play()
-
-task.delay(20, function()
-    if humanoid and humanoid.Parent then humanoid.WalkSpeed = originalSpeed end
-    if HumanModCons.wsLoop then HumanModCons.wsLoop:Disconnect() HumanModCons.wsLoop = nil end
-    if HumanModCons.wsCA then HumanModCons.wsCA:Disconnect() HumanModCons.wsCA = nil end
-    for _, c in ipairs(clones) do if c and c.Parent then c:Destroy() end end
-
-    local tweenOut = TweenService:Create(
-        atmosphere,
-        TweenInfo.new(0.75, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        { Density = originalDensity, Color = originalColor, Offset = originalOffset }
-    )
-    tweenOut:Play()
-end)
-end
 end)

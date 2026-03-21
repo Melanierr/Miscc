@@ -20,6 +20,7 @@ local guops = {5610197459}
 local pas = {663655429}
 local lip = {72659788689464}
 local neo = {85056532479796}
+local bls = {77021749781226}
 local example = {}
 
 local loaderGui = Instance.new("ScreenGui")
@@ -160,8 +161,10 @@ local function loadScripts()
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/Pick%20A%20Side%20(OS)",true))()
 		elseif table.find(lip, placeId) then
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/Life%20In%20Prison%20(OS)",true))()
-				elseif table.find(neo, placeId) then
+		elseif table.find(neo, placeId) then
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/Neo%20Tennis%20(OS)",true))()
+		elseif table.find(bls, placeId) then
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/BL%3AS%20(OS)",true))()
 		else
 			game:GetService("StarterGui"):SetCore("SendNotification", {
     			Title = "Celeron's Loader";

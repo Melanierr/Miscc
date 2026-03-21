@@ -1,0 +1,115 @@
+--[[ anticheat bypass rewritten by celeron, originally by cazan :3 ]]--
+print("ac bypassed by cazan, rewritten by celeron :3")
+
+local sg = game:GetService("StarterGui")
+local function notify(t) sg:SetCore("SendNotification",{Title="Check",Text=t,Duration=5}) end
+
+for _,fn in ipairs({"getgc","hookmetamethod","getconnections","checkcaller","getcallingscript","debug.getupvalue"}) do
+    local parts = string.split(fn,".")
+    local ok = (#parts==1 and getfenv()[fn]) or (#parts==2 and getfenv()[parts[1]] and getfenv()[parts[1]][parts[2]])
+    if not ok then
+        notify("executor not supported.")
+        return
+    end
+end
+
+print("credits to celeron, revamped by zylx")
+print("also credits to cazan for the bypass")
+
+local ps = game:GetService("Players")
+local lp = ps.LocalPlayer
+local RunService = game:GetService("RunService")
+local replicatedfirst = game:GetService("ReplicatedFirst")
+local BClient = replicatedfirst:WaitForChild("BClient")
+
+for _, v in pairs(getgc(true)) do
+    if typeof(v) == "table" then
+        if rawget(v, "ACTrigger") then
+            rawset(v, "ACTrigger", {
+                FireServer = function() end,
+                UFireServer = function() end,
+                _Fire = function() end
+            })
+        end
+        if rawget(v, "ACCFrameChanged") then
+            rawset(v, "ACCFrameChanged", {
+                FireServer = function() end,
+                UFireServer = function() end,
+                _Fire = function() end
+            })
+        end
+        if rawget(v, "ACKickTrigger") then
+            rawset(v, "ACKickTrigger", {
+                FireServer = function() end,
+                UFireServer = function() end,
+                _Fire = function() end
+            })
+        end
+        if rawget(v, "ACF") then
+            rawset(v, "ACF", {
+                FireServer = function() end,
+                UFireServer = function() end,
+                _Fire = function() end
+            })
+        end
+    end
+end
+
+local get_uv = debug.getupvalue or getupvalue
+local is_l = islclosure or function(f) return not iscclosure(f) end
+local is_x = is_synapse_function or issentinelclosure or is_protosmasher_closure or is_sirhurt_closure or istempleclosure or checkclosure
+
+for _, fn in ipairs(getgc()) do
+    if typeof(fn) == "function" and is_l(fn) and not is_x(fn) then
+        for i = 1, debug.getinfo(fn).nups do
+            local ok, uv = pcall(get_uv, fn, i)
+            if ok and typeof(uv) == "table" and uv.ACTrigger and uv.ACKickTrigger then
+                uv.ACTrigger = function(...) end
+                uv.ACKickTrigger = function(...) end
+            end
+        end
+    end
+end
+
+local hookRagdoll
+hookRagdoll = hookmetamethod(game, "__namecall", function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    if not checkcaller() and typeof(self) == "Instance" and self == lp.Character then
+        if method == "SetAttribute" and args[1] == "Ragdoll" then
+            return
+        elseif method == "GetAttribute" and args[1] == "Ragdoll" then
+            return false
+        end
+    end
+    return hookRagdoll(self, unpack(args))
+end)
+
+local hookProps
+hookProps = hookmetamethod(game, "__newindex", function(self, key, value)
+    if not checkcaller() and self:IsA("Humanoid") and getcallingscript() == BClient then
+        if key == "WalkSpeed" and value <= 16 then return end
+        if key == "JumpHeight" and value <= 0 then return end
+        if key == "AutoRotate" and value == false then return end
+    end
+    return hookProps(self, key, value)
+end)
+
+local function disableBClientConnections()
+    for _, v in pairs(getconnections(RunService.Stepped)) do
+        if v.LuaConnection then
+            local func = v.Function
+            if func and getfenv(func).script and getfenv(func).script.Name == "BClient" then
+                local uvs = (debug.getupvalues or getupvalues)(func)
+                local protos = debug.getprotos(func)
+                if #protos == 0 and #uvs == 9 then v:Disable() end
+            end
+        end
+    end
+end
+
+disableBClientConnections()
+lp.CharacterAdded:Connect(function()
+    task.wait(0.1) disableBClientConnections()
+    task.wait(0.5) disableBClientConnections()
+end)

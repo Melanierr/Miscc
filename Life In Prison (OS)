@@ -1,6 +1,6 @@
 if not _G.HasScriptRun then
     _G.HasScriptRun = true
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/lip%20ac%20byp", true))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/anticheat%20bypass%20(lip)", true))()
 end
 
 local ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/Daffy734/code/refs/heads/main/yep"))()

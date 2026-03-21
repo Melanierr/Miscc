@@ -1,0 +1,265 @@
+local ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/daff"))()
+
+local win = ui:Create({
+    Name = "Celeron's GUI (Blue Lock: Skibidi)",
+    ThemeColor = Color3.fromRGB(55, 55, 55),
+    ThemeGradient = Color3.fromRGB(255, 255, 255),
+    StartupSound = "rbxassetid://6958727243",
+    ThemeFont = Enum.Font.GothamBold
+})
+
+local maintab = win:Tab("Main")
+local siltab = win:Tab("Silent")
+local misctab = win:Tab("Others")
+local helptab = win:Tab("Info")
+
+maintab:Label("Script Made By Celeron + Daffy!")
+siltab:Label("Silent Features.")
+misctab:Label("Other Features.")
+helptab:Label("GUI Controls Are Below, Script Credits Are At The Bottom!")
+helptab:Label("Show / Hide GUI: Right Alt")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function playerBoosts(character, propName, value)
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+    local running = true
+    task.spawn(function()
+        while running and humanoid.Parent do
+            humanoid[propName] = value
+            task.wait(0.1)
+        end
+    end)
+    return function() running = false end
+end
+
+do
+    local stopLoop
+    maintab:Textbox("Player Speed", function(v)
+        if stopLoop then stopLoop() end
+        local function apply(char)
+            if stopLoop then stopLoop() end
+            stopLoop = playerBoosts(char, "WalkSpeed", tonumber(v) or 16)
+        end
+        if LocalPlayer.Character then apply(LocalPlayer.Character) end
+        LocalPlayer.CharacterAdded:Connect(apply)
+    end)
+end
+
+do
+    local stopLoop
+    maintab:Textbox("Player Jump", function(v)
+        if stopLoop then stopLoop() end
+        local function apply(char)
+            if stopLoop then stopLoop() end
+            stopLoop = playerBoosts(char, "JumpPower", tonumber(v) or 50)
+        end
+        if LocalPlayer.Character then apply(LocalPlayer.Character) end
+        LocalPlayer.CharacterAdded:Connect(apply)
+    end)
+end
+
+maintab:Toggle("Auto Goal", "Automatically Scores Goals.", function()
+    _G.AUTO_GOAL = not _G.AUTO_GOAL
+
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+    local Workspace = game:GetService("Workspace")
+
+    local LocalPlayer = Players.LocalPlayer
+
+    local phase = "get_ball"
+
+    if _G.AUTO_GOAL then
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Auto Goal",
+            Text = "Enabled.",
+            Duration = 1
+        })
+
+        spawn(function()
+            while _G.AUTO_GOAL do
+                pcall(function()
+                    local char = LocalPlayer.Character
+                    if not char then return end
+
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if not hrp then return end
+
+                    local ball = Workspace:WaitForChild("Ball", 1)
+                    if not ball then return end
+
+                    if phase == "get_ball" then
+                        while ball.Parent ~= char do
+                            hrp.CFrame = ball.CFrame + Vector3.new(0, 3, 0)
+                            task.wait(0.1)
+                        end
+                        task.wait(0.2)
+                        
+                        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                        task.wait(0.05)
+                        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+                        
+                        wait(0.2)
+
+                        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                        task.wait(0.05)
+                        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+
+                        task.wait()
+                        phase = "wait_for_workspace"
+
+                    elseif phase == "wait_for_workspace" then
+                        while ball.Parent ~= Workspace do
+                            task.wait(0.1)
+                        end
+                        task.wait()
+                        phase = "teleport_ball"
+
+                    elseif phase == "teleport_ball" then
+                        local goalCFrame
+                        if LocalPlayer.Team.Name == "Home" then
+                            goalCFrame = CFrame.new(239, 10, 0)
+                        elseif LocalPlayer.Team.Name == "Away" then
+                            goalCFrame = CFrame.new(-239, 10, 0)
+                        else
+                            return
+                        end
+
+                        ball.CFrame = goalCFrame + Vector3.new(0, 2, 0)
+                        task.wait(7.75)
+                        phase = "get_ball"
+                    end
+                end)
+            end
+        end)
+    else
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Auto Goal",
+            Text = "Disabled.",
+            Duration = 1
+        })
+    end
+end)
+
+maintab:Toggle("Always Ball", "Attempts To Always Hold The Ball.", function()
+    getgenv().always_ball_active = not getgenv().always_ball_active
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Always Ball",
+        Text = getgenv().always_ball_active and "Enabled." or "Disabled.",
+        Duration = 1
+    })
+    if getgenv().always_ball_active then
+        workspace.Gravity = 0
+        coroutine.wrap(function()
+            local VirtualInputManager = game:GetService("VirtualInputManager")
+            while getgenv().always_ball_active do
+                local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                local ball = workspace:FindFirstChild("Ball")
+                if root and ball then
+                    root.CFrame = CFrame.new(ball.Position)
+                end
+                for _, plr in pairs(game.Players:GetPlayers()) do
+                    if plr ~= game.Players.LocalPlayer and plr.Character then
+                        local otherball = plr.Character:FindFirstChild("Ball")
+                        local otherroot = plr.Character:FindFirstChild("HumanoidRootPart")
+                        if otherball and otherroot and root then
+                            root.CFrame = otherball.CFrame
+                            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                            task.wait(0.03)
+                            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                        end
+                    end
+                end
+                task.wait(0.1)
+            end
+        end)()
+    else
+        workspace.Gravity = 196.2
+    end
+end)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+local Workspace = game:GetService("Workspace")
+
+local localPlayer = Players.LocalPlayer
+
+getgenv().ballMagnetEnabled = false
+getgenv().ballMagnetRadius = 1
+
+siltab:Toggle("Ball Magnet", "Allows Grabbing The Ball From Far Away.", function(v)
+    getgenv().ballMagnetEnabled = v
+
+    StarterGui:SetCore("SendNotification", {
+        Title = "Ball Magnet",
+        Text = v and "Enabled." or "Disabled.",
+        Duration = 2
+    })
+end)
+
+siltab:Slider("Ball Magnet Radius", 1, 1, 50, 1, function(v)
+    getgenv().ballMagnetRadius = v
+end)
+
+if getgenv().ballMagnetConnection then
+    getgenv().ballMagnetConnection:Disconnect()
+end
+
+local hrp
+
+local function setupCharacter(char)
+    hrp = char:WaitForChild("HumanoidRootPart", 10)
+end
+
+if localPlayer.Character then
+    setupCharacter(localPlayer.Character)
+end
+
+localPlayer.CharacterAdded:Connect(setupCharacter)
+
+getgenv().ballMagnetConnection = RunService.Heartbeat:Connect(function()
+    if not getgenv().ballMagnetEnabled then return end
+    if not hrp then return end
+
+    local radius = getgenv().ballMagnetRadius or 1
+    if radius < 1 then return end
+
+    local ball = Workspace:FindFirstChild("Ball")
+    if not ball then return end
+
+    local dist = (hrp.Position - ball.Position).Magnitude
+    if dist > radius then return end
+
+    ball.CFrame = hrp.CFrame * CFrame.new(0, 1, 0)
+end)
+
+misctab:Button("Infinite Yield", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+helptab:Button("Copy Owner Discord Username", function()
+    local StarterGui = game:GetService("StarterGui")
+    StarterGui:SetCore("SendNotification", {
+        Title = "Discord Username",
+        Text = "Copied to your clipboard!",
+        Duration = 3,
+        Button1 = "alright fella",
+    })
+    setclipboard("ghostofcelleron")
+end)
+
+helptab:Button("Copy Discord Server Invite", function()
+    local StarterGui = game:GetService("StarterGui")
+    StarterGui:SetCore("SendNotification", {
+        Title = "Discord Invite",
+        Text = "Copied to your clipboard!",
+        Duration = 3,
+        Button1 = "alright fella",
+    })
+    setclipboard("https://discord.gg/8stFYxJv4R")
+end)
