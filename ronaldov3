@@ -34,15 +34,12 @@ local fahh = false
 local disabled = false
 local lastAccelerate = 0
 local accelerateCooldown = 7.5
-local lastGOAT = 0
-local goatCooldown = 30
 
 local skillNames = {
     [1] = "CR7 Dribble",
     [2] = "Bicycle Kick",
     [3] = "Flawless Pass",
-    [4] = "Reaction Dash",
-    [5] = "Greatest Of All Time"
+    [4] = "Reaction Dash"
 }
 
 local function ToggleAttachment(attachment, enabled, duration)
@@ -177,7 +174,7 @@ task.spawn(function()
 				if backpack then
 					local hb = backpack:FindFirstChild("Hotbar")
 					if hb then
-						for i = 1, 5 do
+						for i = 1, 4 do
 							local skill = hb:FindFirstChild("skill" .. i)
 							if skill and skill:FindFirstChild("Base") and skill.Base:FindFirstChild("ToolName") then
 								if skill.Base.ToolName.Text ~= skillNames[i] then
@@ -189,7 +186,6 @@ task.spawn(function()
 								if i == 2 then skill.Base.Reuse.Text = "Shot" end
 								if i == 3 then skill.Base.Reuse.Text = "Pass" end
 								if i == 4 then skill.Base.Reuse.Text = "Off The Ball" end
-								if i == 5 then skill.Base.Reuse.Text = "Awaken" end
 							end
 							if skill and skill:FindFirstChild("Base") and skill.Base:FindFirstChild("Reuse") then
 								skill.Base.Reuse.Visible = true
@@ -476,114 +472,6 @@ UserInputService.InputBegan:Connect(function(input, bg)
 				if effect2 then effect2:Destroy() end
 			end)
 		end)
-
-	elseif input.KeyCode == Enum.KeyCode.Five then
-		if tick() - lastGOAT < goatCooldown then return end
-
-		local stun = state and state:FindFirstChild("stun")
-		if stun then
-			stun.Value = true
-			task.wait(0.03)
-			stun.Value = false
-		end
-
-		if not hasball() then return end
-
-		lastGOAT = tick()
-		StartCooldownUI(5, goatCooldown)
-
-		char.Humanoid.HipHeight = 15
-		task.wait(0.1)
-
-		char.Humanoid.WalkSpeed = 0
-		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-
-		root.CFrame = CFrame.new(-573, 3, 950)
-		root.Anchored = true
-
-		task.spawn(function()
-			local goatAnim = Instance.new("Animation")
-			goatAnim.AnimationId = "rbxassetid://117697415418770"
-			local goatTrack = char.Humanoid:LoadAnimation(goatAnim)
-			goatTrack.Priority = Enum.AnimationPriority.Action4
-			goatTrack:Play()
-
-			local goatSound = Instance.new("Sound")
-			goatSound.SoundId = "rbxassetid://71954796335050"
-			goatSound.Volume = 1.5
-			goatSound.Looped = false
-			goatSound.Parent = game:GetService("SoundService")
-			
-			local soundConnection
-			soundConnection = goatSound.Loaded:Connect(function()
-				goatSound:Play()
-				game.Debris:AddItem(goatSound, goatSound.TimeLength + 1)
-				if soundConnection then soundConnection:Disconnect() end
-			end)
-			
-			if goatSound.IsLoaded then
-				goatSound:Play()
-				game.Debris:AddItem(goatSound, goatSound.TimeLength + 1)
-				if soundConnection then soundConnection:Disconnect() end
-			end
-		end)
-
-		task.wait(16.5)
-
-		local gui = Instance.new("ScreenGui")
-		gui.IgnoreGuiInset = true
-		gui.ResetOnSpawn = false
-		gui.Parent = plr:WaitForChild("PlayerGui")
-		
-		local flash = Instance.new("Frame")
-		flash.Size = UDim2.new(1, 0, 1, 0)
-		flash.BackgroundColor3 = Color3.new(1, 1, 1)
-		flash.BackgroundTransparency = 1
-		flash.BorderSizePixel = 0
-		flash.Parent = gui
-		
-		TweenService:Create(flash, TweenInfo.new(0.25, Enum.EasingStyle.Linear), {
-			BackgroundTransparency = 0
-		}):Play()
-		
-		task.delay(2.7, function()
-			TweenService:Create(flash, TweenInfo.new(1.8, Enum.EasingStyle.Linear), {
-				BackgroundTransparency = 1
-			}):Play()
-			
-			task.delay(1.9, function()
-				if gui then gui:Destroy() end
-			end)
-		end)
-
-		task.wait(1.2)
-
-		root.Anchored = false
-		
-		task.wait(0.5)
-		local goal = plr.Team.Name == "A" and workspace.map:FindFirstChild("Bgoal") or workspace.map:FindFirstChild("Agoal")
-		
-		if goal and goal:IsA("BasePart") then
-			root.CFrame = goal.CFrame
-			
-			task.wait(0.185)
-			
-			ReplicatedStorage.ByteNetReliable:FireServer(
-				buffer.fromstring(buffers["base"]),
-				{ { "kick", 30, true, vector.create(0, 1, 0) } }
-			)
-			
-			task.delay(0.35, function()
-				root.CFrame = CFrame.new(-573, 3, 950)
-				char.Humanoid.WalkSpeed = 40
-				char.Humanoid.HipHeight = 0
-			end)
-		else
-			task.delay(0.35, function()
-				char.Humanoid.WalkSpeed = 40
-				char.Humanoid.HipHeight = 0
-			end)
-		end
 	end
 end)
 

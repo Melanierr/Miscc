@@ -1,0 +1,516 @@
+local plr = game.Players.LocalPlayer
+local cam = game.Workspace.CurrentCamera
+
+local stopped = false
+local buffers = {}
+
+--
+loadstring(game:HttpGet("https://pastebin.com/raw/8XJh7dzh"))()
+repeat
+	task.wait()
+until game.Lighting:FindFirstChild("BUFFERSTRINGS")
+for _, val in ipairs(game.Lighting:FindFirstChild("BUFFERSTRINGS"):GetChildren()) do
+	buffers[val.Name] = val.Value
+end
+game.Lighting:FindFirstChild("BUFFERSTRINGS"):Destroy()
+--
+
+local link = "https://files.catbox.moe/u1yzdo.mp3"
+local filename = "lokiTheme.mp3"
+
+local data = game:HttpGet(link, true)
+writefile(filename, data)
+
+local getasset = getcustomasset or getsynasset
+if not getasset then
+	error("executor missing getcustomasset/getsynasset")
+end
+
+game:GetService("ReplicatedStorage").Resources.isagi.theme.SoundId = getasset(filename)
+game:GetService("ReplicatedStorage").Resources.isagi["isagi themeover"].SoundId = getasset(filename)
+game:GetService("ReplicatedStorage").Resources.isagi["direct shot"].SoundId = "rbxassetid://118471535207840"
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local Debris = game:GetService("Debris")
+
+local function CancelMove()
+	local charg = plr.Character
+	if charg.state.stun.Value == false then
+		charg.state.stun.Value = true
+		task.wait(0.04)
+		charg.state.stun.Value = false
+	end
+end
+
+local function IsAnimationPlaying(character, animId)
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return false end
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if not animator then return false end
+	for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+		if track.Animation and track.Animation.AnimationId:find(tostring(animId)) then
+			return true, track
+		end
+	end
+	return false
+end
+
+local function HasBall()
+	return plr.Character:FindFirstChild("Ball")
+end
+
+local function Stunned()
+	return plr.Character.state.stun.Value
+end
+
+local function IsMoveOnCD(name)
+	local hotbar = plr.PlayerGui.Hotbar
+	if hotbar and hotbar.Backpack.Hotbar:FindFirstChild(name) then
+		local button = hotbar.Backpack.Hotbar:FindFirstChild(name)
+		if button.Cooldown.Visible == true then
+			return true
+		else
+			return false
+		end
+	end
+	return false
+end
+
+local function DoCDVisual(len, name)
+	local hotbar = plr.PlayerGui.Hotbar
+	if hotbar and hotbar.Backpack.Hotbar:FindFirstChild(name) then
+		local button = hotbar.Backpack.Hotbar:FindFirstChild(name)
+		button.Cooldown.Visible = true
+		button.Cooldown.Size = UDim2.new(1, 0, -1, 0)
+		game.TweenService:Create(button.Cooldown, TweenInfo.new(len, Enum.EasingStyle.Linear), {Size = UDim2.new(1, 0, 0, 0)}):Play()
+		task.delay(len, function()
+			button.Cooldown.Visible = false
+		end)
+	end
+end
+
+local function EmitAttachment(attachment)
+	if not attachment then return end
+	for _, descendant in ipairs(attachment:GetDescendants()) do
+		if descendant:IsA("ParticleEmitter") then
+			local delayTime = descendant:GetAttribute("EmitDelay") or 0
+			local count = descendant:GetAttribute("EmitCount") or 1
+			if delayTime > 0 then
+				task.delay(delayTime, function()
+					descendant:Emit(count)
+				end)
+			else
+				descendant:Emit(count)
+			end
+		end
+	end
+end
+
+local function particleAction(part)
+	local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+	for _, v in ipairs(part:GetDescendants()) do
+		if v:IsA("ParticleEmitter") then
+			local emitter = v:Clone()
+			emitter.Parent = root
+			emitter.Enabled = true
+			local delayTime = emitter:GetAttribute("EmitDelay") or 0
+			local count = emitter:GetAttribute("EmitCount")
+			if count then
+				if delayTime > 0 then
+					task.delay(delayTime, function()
+						if emitter then emitter:Emit(count) end
+					end)
+				else
+					emitter:Emit(count)
+				end
+			end
+			game.Debris:AddItem(emitter, 6)
+		end
+	end
+end
+
+local function Skill1(char)
+	if IsMoveOnCD("skill1") then CancelMove() return end
+	if not HasBall() then return CancelMove() end
+
+	local root = char.HumanoidRootPart
+	local player = plr
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoid = character:WaitForChild("Humanoid")
+
+	local animation = Instance.new("Animation")
+	animation.AnimationId = "rbxassetid://115839777221212"
+
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if not animator then
+		animator = Instance.new("Animator")
+		animator.Parent = humanoid
+	end
+	
+	local track = animator:LoadAnimation(animation)
+	track.Priority = Enum.AnimationPriority.Action4
+	track:Play()
+
+	wait(0.625)
+
+	local dashClone:Model = game:GetService("ReplicatedStorage").Resources.barou.LongShotVFX.SHOT:Clone()
+	dashClone:PivotTo(root.CFrame)
+	for _, descendant in ipairs(dashClone:GetDescendants()) do
+		if descendant:IsA("ParticleEmitter") then
+			descendant.Color = ColorSequence.new(Color3.fromRGB(255, 204, 0))
+		end
+	end
+	dashClone.Parent = workspace.Effects
+	game.Debris:AddItem(dashClone, 10)
+	local dashWeld = Instance.new("WeldConstraint")
+	dashWeld.Parent = dashClone
+	dashWeld.Part0 = root
+	dashWeld.Part1 = dashClone
+	EmitAttachment(dashClone)
+end
+
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
+
+local remote2 = ReplicatedStorage:WaitForChild("ByteNetReliable")
+local plr = Players.LocalPlayer
+local cam = workspace.CurrentCamera
+
+local function Skill2(char)
+	if IsMoveOnCD("skill2") then CancelMove() return end
+	if HasBall() then return CancelMove() end
+	if Stunned() then return end
+
+	local root = char:WaitForChild("HumanoidRootPart")
+	local humanoid = char:WaitForChild("Humanoid")
+	local targetPart = workspace.Terrain:FindFirstChild("Ball")
+	if not targetPart then return end	
+
+	local heightDiff = targetPart.Position.Y - root.Position.Y
+	if heightDiff < 15 then
+		CancelMove()
+		return
+	end
+
+	CancelMove()
+
+	local startTime = tick()
+	local timeout = 1
+
+	local connection
+	connection = RunService.RenderStepped:Connect(function()
+		if not root or not targetPart then
+			connection:Disconnect()
+			return
+		end
+
+		if tick() - startTime >= timeout then
+			connection:Disconnect()
+			return
+		end
+
+		if HasBall() then
+			connection:Disconnect()
+
+			local anim = Instance.new("Animation")
+			anim.AnimationId = "rbxassetid://85295479301691"
+			local track = humanoid:LoadAnimation(anim)
+
+			cam.FieldOfView = 30
+			TweenService:Create(cam, TweenInfo.new(0.6), {FieldOfView = 70}):Play()
+
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://106669508979055"
+			sound.Volume = 1
+			sound.Parent = SoundService
+			sound:Play()
+
+			local camera = workspace.CurrentCamera
+			local originalType = camera.CameraType
+			local originalSubject = camera.CameraSubject
+
+			root.Anchored = true
+			root.AssemblyLinearVelocity = Vector3.zero
+			humanoid.AutoRotate = false
+
+			camera.CameraType = Enum.CameraType.Scriptable
+			camera.CFrame = CFrame.new(
+				root.Position + root.CFrame.LookVector * 5 + Vector3.new(0,0.5,0),
+				root.Position + Vector3.new(0,0.5,0)
+			)
+
+			local hold
+			hold = RunService.RenderStepped:Connect(function()
+				if not track.IsPlaying then
+					hold:Disconnect()
+					root.Anchored = false
+					humanoid.AutoRotate = true
+					camera.CameraType = originalType
+					camera.CameraSubject = humanoid
+					return
+				end
+
+				root.AssemblyLinearVelocity = Vector3.zero
+
+				camera.CFrame = CFrame.new(
+					root.Position + root.CFrame.LookVector * 5 + Vector3.new(0,0.5,0),
+					root.Position + Vector3.new(0,0.5,0)
+				)
+			end)
+
+			track:Play()
+			return
+		end
+
+		if (targetPart.Position - root.Position).Magnitude > 10 then
+			local pos = targetPart.Position
+			local correctedPos = Vector3.new(pos.X, pos.Y - 4, pos.Z)
+			local newCF = CFrame.new(correctedPos)
+
+			root.CFrame = newCF
+			RunService.RenderStepped:Wait()
+			root.CFrame = newCF
+
+			task.spawn(function()
+				remote2:FireServer(buffer.fromstring(buffers["grabball"]))
+			end)
+		end
+	end)
+end
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+
+local plr = Players.LocalPlayer
+local Skill3Active = false
+local DashVFXParts = {}
+
+for i = 1, 40 do
+	local part = Instance.new("Part")
+	part.Anchored = true
+	part.CanCollide = false
+	part.Material = Enum.Material.Neon
+	part.Color = Color3.fromRGB(240, 245, 255)
+	part.Size = Vector3.new(0.15, 0.15, 20)
+	part.Transparency = 1
+	part.Parent = workspace
+	part:SetAttribute("InUse", false)
+	table.insert(DashVFXParts, part)
+end
+
+local function getDashPart()
+	for _, part in ipairs(DashVFXParts) do
+		if not part:GetAttribute("InUse") then
+			part:SetAttribute("InUse", true)
+			part.Transparency = 0
+			return part
+		end
+	end
+end
+
+local function releaseDashPart(part)
+	part:SetAttribute("InUse", false)
+	part.Transparency = 1
+end
+
+local function playDashVFX()
+	local char = plr.Character
+	if not char then return end
+	local root = char:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+	local look = root.CFrame.LookVector
+
+	for i = 1, math.random(10,15) do
+		local line = getDashPart()
+		if line then
+			local offset = Vector3.new(math.random(-6,6), math.random(-3,4), math.random(-6,6))
+			local startPos = root.Position + offset
+			line.CFrame = CFrame.lookAt(startPos, startPos + look)
+			line:SetAttribute("DashVFX", true)
+			local tween = TweenService:Create(line, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Transparency = 1})
+			tween:Play()
+			tween.Completed:Connect(function() releaseDashPart(line) end)
+		end
+	end
+
+	for i = 1, 10 do
+		local line = getDashPart()
+		if line then
+			local offset = Vector3.new(math.random(-5,5), math.random(-3,4), math.random(-5,5))
+			local startPos = root.Position - look * math.random(4, 8) + offset
+			line.CFrame = CFrame.lookAt(startPos, startPos + look)
+			line:SetAttribute("DashVFX", true)
+			local tween = TweenService:Create(line, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Transparency = 1})
+			tween:Play()
+			tween.Completed:Connect(function() releaseDashPart(line) end)
+		end
+	end
+end
+
+local function Skill3(char)
+	CancelMove()
+	if stopped or Skill3Active or IsMoveOnCD("skill3") or Stunned() then return end
+	Skill3Active = true
+
+	spawn(function()
+		while Skill3Active do
+			if stopped then
+				Skill3Active = false
+				break
+			end
+
+			local root = char:WaitForChild("HumanoidRootPart")
+			DoCDVisual(0.5, "skill3")
+
+			local dashSound = Instance.new("Sound")
+			dashSound.SoundId = "rbxassetid://120170187802322"
+			dashSound.Volume = 1
+			dashSound.Parent = SoundService
+			dashSound:Play()
+			game:GetService("Debris"):AddItem(dashSound, 2)
+
+			local distance = 75
+			local direction = root.CFrame.LookVector
+			local origin = root.Position
+
+			local raycastParams = RaycastParams.new()
+			raycastParams.FilterDescendantsInstances = {char}
+			raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+			raycastParams.IgnoreWater = true
+
+			local result = Workspace:Raycast(origin, direction * distance, raycastParams)
+			if result then
+				root.CFrame = CFrame.new(result.Position - direction * 3, result.Position + direction)
+			else
+				root.CFrame = root.CFrame + direction * distance
+			end
+
+			playDashVFX()
+			task.wait(0.5)
+		end
+	end)
+end
+
+local function ult(char)
+	if Stunned() then return end
+	local theme = game:GetService("ReplicatedStorage").Resources.isagi.theme
+	theme.TimePosition = 14
+	theme.Volume = 0.5
+end
+
+local function SetUp(char)
+	if stopped then return end
+	repeat task.wait() until plr.Team ~= game.Teams.lobby
+	task.wait(0.1)
+
+	local hotbar = plr.PlayerGui.Hotbar
+	hotbar.Backpack.Hotbar.skill1.Base.MouseButton1Down:Connect(function()
+		Skill1(plr.Character)
+	end)
+	hotbar.Backpack.Hotbar.skill2.Base.MouseButton1Down:Connect(function()
+		Skill2(plr.Character)
+	end)
+
+	plr.Character:GetAttributeChangedSignal("FlowActive"):Connect(function()
+		if plr.Character:GetAttribute("FlowActive") == true then
+			if stopped then return end
+			ult(char)
+		end
+	end)
+
+	hotbar.Backpack.Hotbar.skill1.Base.Reuse.Text = "Ball"
+	hotbar.Backpack.Hotbar.skill2.Base.Reuse.Visible = true
+	hotbar.Backpack.Hotbar.skill2.Base.Reuse.Text = "Trap"
+	hotbar.Backpack.Hotbar.skill3.Base.Reuse.Text = "Movement"
+	hotbar.Backpack.Hotbar.skill4.Visible = false
+	hotbar.Backpack.Hotbar.skill5.Visible = false
+	hotbar.Backpack.Hotbar.skill1.Base.ToolName.Text = "Holding Back"
+	hotbar.Backpack.Hotbar.skill2.Base.ToolName.Text = "Too Slow."
+	hotbar.Backpack.Hotbar.skill3.Base.ToolName.Text = "Lightspeed Dash"
+
+	hotbar.MagicHealth.Awakening.Text = "Weak Spots"
+	hotbar.MagicHealth.TextLabel.Visible = true
+	hotbar.MagicHealth.TextLabel.Text = "Um, Is This Okay?"
+	hotbar.MagicHealth.Health.Frame.UIGradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(123, 50, 168))
+	}
+end
+
+SetUp(plr.Character)
+
+plr.CharacterAdded:Connect(function(char)
+	if stopped then return end
+	task.wait(1)
+	SetUp(char)
+end)
+
+local Workspace = game:GetService("Workspace")
+
+local shot = "rbxassetid://118471535207840"
+local isag = {
+	["rbxassetid://114952862979282"] = true
+}
+
+local soundReplacementActive = true
+
+local function replaceSound(sound)
+	if not sound:IsA("Sound") then return end
+	if not soundReplacementActive then return end
+	if isag[sound.SoundId] then
+		sound:Stop()
+		sound.SoundId = shot
+		sound:Play()
+	end
+end
+
+for _, sound in ipairs(Workspace:GetDescendants()) do
+	replaceSound(sound)
+end
+
+local connection
+connection = Workspace.DescendantAdded:Connect(replaceSound)
+
+game.UserInputService.InputBegan:Connect(function(input, bg)
+	if bg or stopped then return end
+
+	if input.KeyCode == Enum.KeyCode.One then
+		Skill1(plr.Character)
+	elseif input.KeyCode == Enum.KeyCode.Two then
+		Skill2(plr.Character)
+	elseif input.KeyCode == Enum.KeyCode.Three then
+		Skill3(plr.Character)
+	elseif input.KeyCode == Enum.KeyCode.G then
+		ult(plr.Character)
+	elseif input.KeyCode == Enum.KeyCode.F4 then
+		stopped = true
+		Skill3Active = false
+		soundReplacementActive = false
+		if connection then
+			connection:Disconnect()
+		end
+		print("stopped")
+	end
+end)
+
+game.UserInputService.InputEnded:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.Three then
+		Skill3Active = false
+	end
+end)
+
+game.StarterGui:SetCore("SendNotification", {
+	Title = "Moveset",
+	Text = "loki moveset has been loaded",
+	Duration = 5,
+	Button1 = "Ok",
+})

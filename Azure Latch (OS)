@@ -25,6 +25,7 @@ teleporttab:Label("Map Teleports, No Prerequisites To Use!")
 misctab:Label("Miscellaneous Features, They Give No Advantages In-Game!")
 exploittab:Label("This Tab Comes With Useful Features.")
 
+--- IGNORE THESE
 local buffers = {}
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Melanierr/Miscc/refs/heads/main/one.lua"))()
 repeat
@@ -34,6 +35,16 @@ for _, val in ipairs(game.Lighting:FindFirstChild("BUFFERSTRINGS"):GetChildren()
     buffers[val.Name] = val.Value
 end
 game.Lighting:FindFirstChild("BUFFERSTRINGS"):Destroy()
+
+local role = game:GetService("ReplicatedStorage")
+    :WaitForChild("BytenetStorage")
+    :WaitForChild("Networking").Value
+    :match('"bytenet_selectRole"%s*:%s*(%d+)')
+
+role = role and tonumber(role)
+
+local pick = string.char(role)
+---
 
 helptab:Button("Copy Owner Discord Username", "Copies The Owner's Discord Username To Your Clipboard.", function()
     local StarterGui = game:GetService("StarterGui")
@@ -1619,6 +1630,10 @@ add:Button("Goalkeeper Anywhere (Rejoin To Disable.) (Credit: someone cool..)", 
     end)
 end)
 
+add:Button("Shachoko GK Catch (Req. GK Position.)", "Makes It Almost Impossible To Be Scored On As GK And Does Shachoko Kick.", function()
+loadstring(game:HttpGet("https://pastebin.com/raw/Hr1HnK38"))()
+end)
+
 local oth = maintab:Folder("Other Blatant Features.", Color3.fromRGB(24, 255, 228), true)
 oth:Label("Other Blatant Features: It's In The Name.")
 
@@ -2906,8 +2921,8 @@ local function firePacketsIfNear()
 
     if (root.Position - Vector3.new(-371, 13, -1599)).Magnitude <= 15 or
        (root.Position - Vector3.new(-196, 13, -1599)).Magnitude <= 15 then
-        game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring("\006\001\001\000A"))
-        game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring("\006\001\001\000B"))
+        game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring(pick .. "\001\001\000A"))
+        game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring(pick .. "\001\001\000B"))
     end
 end
 
@@ -2917,8 +2932,8 @@ local function fireGKPackets()
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return end
 
-    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring("\006\005\001\000B"))
-    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring("\006\005\001\000A"))
+    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring(pick .. "\005\001\000B"))
+    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring(pick .. "\005\001\000A"))
 end
 
 autopos:Toggle("Auto Pick CF", "Automatically Picks Center Field Position On Respawn Or Enable.", function()
@@ -2932,7 +2947,7 @@ autopos:Toggle("Auto Pick CF", "Automatically Picks Center Field Position On Res
 
     if autoPositionState.CF then
         autoPositionState.CFConn = game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function()
-            task.wait(1)
+            task.wait(0.3)
             firePacketsIfNear()
         end)
 
@@ -2959,7 +2974,7 @@ autopos:Toggle("Auto Pick GK", "Automatically Picks Goalkeeper Position On Respa
 
     if autoPositionState.GK then
         autoPositionState.GKConn = game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function()
-            task.wait(1)
+            task.wait(0.3)
             fireGKPackets()
         end)
 
@@ -3328,104 +3343,131 @@ autogk:Button("Daffy's Auto GK", "Reset Or Click F4 To Disable.", function()
     gkPlayerState.con:Disconnect()
 end)
 
-local othersil = maintab2:Folder("Other Silent Features.", Color3.fromRGB(24, 255, 228), true)
-othersil:Label("Other Features: Self Explanatory, Other Silent Features.")
+local airdr = maintab2:Folder("Air Dribble Features.", Color3.fromRGB(24, 255, 228), true)
+airdr:Label("Air Dribble: Dribbles The Ball Through The Air.")
 
-local remote = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
-local UIS = game:GetService("UserInputService")
-local StarterGui = game:GetService("StarterGui")
+local bindKey = Enum.KeyCode.LeftAlt
 
 local airDribbleState = {
     enabled = false
 }
 
-othersil:Toggle("Air Dribble (Bind: LeftAlt)", "Kicks The Ball Forward Infront Of You And Up On LeftAlt Click.", function()
-    airDribbleState.enabled = not airDribbleState.enabled
-    StarterGui:SetCore("SendNotification", {
+local function notify(text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Air Dribble",
-        Text = airDribbleState.enabled and "Enabled." or "Disabled.",
+        Text = text,
         Duration = 2
     })
+end
+
+airdr:Toggle("Air Dribble", "Kicks The Ball Forward Infront Of You And Up.", function()
+    airDribbleState.enabled = not airDribbleState.enabled
+    notify(airDribbleState.enabled and "Enabled." or "Disabled.")
 end)
 
-UIS.InputBegan:Connect(function(input, gp)
-    if gp or input.KeyCode ~= Enum.KeyCode.LeftAlt then return end
+airdr:Textbox("Air Dribble Bind", "Enter Key (Example: E, Q, LeftAlt.)", function(text)
+    if typeof(text) ~= "string" then
+        bindKey = Enum.KeyCode.LeftAlt
+        notify("Invalid Key. Bind Is Now LeftAlt.")
+        return
+    end
+
+    local formatted = text:gsub("%s+", "")
+    local success, key = pcall(function()
+        return Enum.KeyCode[formatted]
+    end)
+
+    if success and key then
+        bindKey = key
+        notify("Bind Set To: " .. key.Name)
+    else
+        bindKey = Enum.KeyCode.LeftAlt
+        notify("Invalid Key. Bind Is Now LeftAlt.")
+    end
+end)
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, gp)
+    if gp or input.KeyCode ~= bindKey then return end
     if not airDribbleState.enabled then return end
-    local char = game.Players.LocalPlayer.Character
+
+    local char = game:GetService("Players").LocalPlayer.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not (hum and root) then return end
+
     local anim = Instance.new("Animation")
     anim.AnimationId = "rbxassetid://76587445975710"
     local track = hum:LoadAnimation(anim)
     track:Play()
+
     local dir = root.CFrame.LookVector
     local kickVec = vector.create(dir.X * 0.75, 0.65, dir.Z * 0.75)
-    remote:FireServer(buffer.fromstring(buffers["base"]), { { "kick", 28, false, kickVec } })
+
+    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring(buffers["base"]), {
+        { "kick", 28, false, kickVec }
+    })
 end)
+
+local othersil = maintab2:Folder("Other Features.", Color3.fromRGB(24, 255, 228), true)
+othersil:Label("Other Features: Self Explanatory, Other Silent Features.")
 
 local qteState = {
     enabled = false
 }
 
 othersil:Toggle("Auto QuickTimeEvent", "Automatically Does QuickTimeEvents, How Else Can I Explain It?", function()
-    local runService = game:GetService("RunService")
-    local players = game:GetService("Players")
-    local virtualInputManager = game:GetService("VirtualInputManager")
-    local starterGui = game:GetService("StarterGui")
-    local player = players.LocalPlayer
+qteState.enabled = not qteState.enabled
 
-    qteState.enabled = not qteState.enabled
-
-    local function sendNotification(status)
-        if not autoSkillState.suppressNotifs then
-            starterGui:SetCore("SendNotification", {
-                Title = "QuickTimeEvent",
-                Text = status,
-                Duration = 1
-            })
-        end
+local function sendNotification(status)
+    if not autoSkillState.suppressNotifs then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "QuickTimeEvent",
+            Text = status,
+            Duration = 1
+        })
     end
+end
 
-    local function convertNumberToKeyText(text)
-        local numberMap = {
-            ["1"] = "One", ["2"] = "Two", ["3"] = "Three", ["4"] = "Four", ["5"] = "Five",
-            ["6"] = "Six", ["7"] = "Seven", ["8"] = "Eight", ["9"] = "Nine", ["0"] = "Zero"
-        }
-        return numberMap[text] or text
-    end
+local function convertNumberToKeyText(text)
+    local numberMap = {
+        ["1"] = "One", ["2"] = "Two", ["3"] = "Three", ["4"] = "Four", ["5"] = "Five",
+        ["6"] = "Six", ["7"] = "Seven", ["8"] = "Eight", ["9"] = "Nine", ["0"] = "Zero"
+    }
+    return numberMap[text] or text
+end
 
-    local function isShadeOfGreen(color)
-        return color.G > color.R and color.G > color.B
-    end
+local function isShadeOfGreen(color)
+    return color.G > color.R and color.G > color.B
+end
 
-    local function checkQTE()
-        if qteState.enabled and player and player:FindFirstChild("PlayerGui") then
-            local qteGui = player.PlayerGui:FindFirstChild("Qte")
-            if qteGui and qteGui:FindFirstChild("QTE") then
-                for _, descendant in ipairs(qteGui.QTE:GetDescendants()) do
-                    if descendant:IsA("Frame") or descendant:IsA("TextLabel") then
-                        if isShadeOfGreen(descendant.BackgroundColor3) then
-                            local textLabel = qteGui.QTE:FindFirstChild("TextLabel")
-                            if textLabel then
-                                local keyText = convertNumberToKeyText(textLabel.Text)
-                                local keyCode = Enum.KeyCode[keyText]
-                                if keyCode then
-                                    virtualInputManager:SendKeyEvent(true, keyCode, false, game)
-                                    virtualInputManager:SendKeyEvent(false, keyCode, false, game)
-                                end
+local function checkQTE()
+    local player = game:GetService("Players").LocalPlayer
+    if qteState.enabled and player and player:FindFirstChild("PlayerGui") then
+        local qteGui = player.PlayerGui:FindFirstChild("Qte")
+        if qteGui and qteGui:FindFirstChild("QTE") then
+            for _, descendant in ipairs(qteGui.QTE:GetDescendants()) do
+                if descendant:IsA("Frame") or descendant:IsA("TextLabel") then
+                    if isShadeOfGreen(descendant.BackgroundColor3) then
+                        local textLabel = qteGui.QTE:FindFirstChild("TextLabel")
+                        if textLabel then
+                            local keyText = convertNumberToKeyText(textLabel.Text)
+                            local keyCode = Enum.KeyCode[keyText]
+                            if keyCode then
+                                game:GetService("VirtualInputManager"):SendKeyEvent(true, keyCode, false, game)
+                                game:GetService("VirtualInputManager"):SendKeyEvent(false, keyCode, false, game)
                             end
-                            break
                         end
+                        break
                     end
                 end
             end
         end
     end
+end
 
-    runService.RenderStepped:Connect(checkQTE)
+game:GetService("RunService").RenderStepped:Connect(checkQTE)
 
-    sendNotification(qteState.enabled and "Enabled." or "Disabled.")
+sendNotification(qteState.enabled and "Enabled." or "Disabled.")
 end)
 
 local formlessState = {
@@ -3433,72 +3475,69 @@ local formlessState = {
 }
 
 othersil:Toggle("Auto Formless (Bind: Y)", "Shidou Only Formless Macro.", function()
-    local UIS = game:GetService("UserInputService")
-    local Players = game:GetService("Players")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local StarterGui = game:GetService("StarterGui")
-    local Camera = workspace.CurrentCamera
-    local LP = Players.LocalPlayer
-    local ByteNetReliable = ReplicatedStorage:WaitForChild("ByteNetReliable")
-
     formlessState.enabled = not (formlessState.enabled or false)
 
-    if not autoSkillState.suppressNotifs then
-        StarterGui:SetCore("SendNotification", {
-            Title = "Auto Formless",
-            Text = formlessState.enabled and "Enabled." or "Disabled.",
-            Duration = 2
-        })
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Auto Formless",
+        Text = formlessState.enabled and "Enabled." or "Disabled.",
+        Duration = 2
+    })
+
+    if formlessState.inputConnection then
+        formlessState.inputConnection:Disconnect()
+        formlessState.inputConnection = nil
     end
 
-    if not formlessState.enabled then return end
+    if formlessState.enabled then
+        formlessState.inputConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gp)
+            if gp or input.KeyCode ~= Enum.KeyCode.Y then return end
+            if game:GetService("UserInputService").MouseBehavior ~= Enum.MouseBehavior.LockCenter then return end
 
-    UIS.InputBegan:Connect(function(input, gp)
-        if not formlessState.enabled or gp or input.KeyCode ~= Enum.KeyCode.Y or UIS.MouseBehavior ~= Enum.MouseBehavior.LockCenter then return end
+            local LP = game:GetService("Players").LocalPlayer
+            local char = LP.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if not hrp or not hum then return end
 
-        local char = LP.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if not hrp or not hum then return end
+            hum.AutoRotate = false
 
-        hum.AutoRotate = false
+            local Camera = workspace.CurrentCamera
+            local camType = Camera.CameraType
+            local camSubject = Camera.CameraSubject
+            local camCF = Camera.CFrame
+            local flipped = camCF * CFrame.Angles(0, math.rad(180), 0)
 
-        local camType = Camera.CameraType
-        local camSubject = Camera.CameraSubject
-        local camCF = Camera.CFrame
-        local flipped = camCF * CFrame.Angles(0, math.rad(180), 0)
+            Camera.CameraType = Enum.CameraType.Scriptable
+            Camera.CFrame = flipped
 
-        Camera.CameraType = Enum.CameraType.Scriptable
-        Camera.CFrame = flipped
+            task.delay(0.1, function()
+                if LP.Character and LP.Character:FindFirstChildOfClass("Humanoid") then
+                    Camera.CameraSubject = LP.Character:FindFirstChildOfClass("Humanoid")
+                    Camera.CameraType = Enum.CameraType.Custom
+                else
+                    Camera.CameraSubject = camSubject
+                    Camera.CameraType = camType
+                end
+                hum.AutoRotate = true
+            end)
 
-        task.delay(0.1, function()
-            if LP.Character and LP.Character:FindFirstChildOfClass("Humanoid") then
-                Camera.CameraSubject = LP.Character:FindFirstChildOfClass("Humanoid")
-                Camera.CameraType = Enum.CameraType.Custom
-            else
-                Camera.CameraSubject = camSubject
-                Camera.CameraType = camType
-            end
-            hum.AutoRotate = true
+            task.wait(0.15)
+
+            local anim = Instance.new("Animation")
+            anim.AnimationId = "rbxassetid://76587445975710"
+            local track = hum:LoadAnimation(anim)
+            track:Play()
+
+            local dir = hrp.CFrame.LookVector
+            local kickVec = vector.create(dir.X * 0.5, 1, dir.Z * 0.5)
+
+            local remote = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
+            remote:FireServer(buffer.fromstring(buffers["base"]), { { "kick", 25, false, kickVec } })
+            game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(
+                buffer.fromstring(buffers["base"]), { { "skill1" } }
+            )
         end)
-
-        task.wait(0.15)
-
-        local anim = Instance.new("Animation")
-        anim.AnimationId = "rbxassetid://76587445975710"
-        local track = hum:LoadAnimation(anim)
-        track:Play()
-
-        local dir = hrp.CFrame.LookVector
-        local kickVec = vector.create(dir.X * 0.5, 1, dir.Z * 0.5)
-
-        remote:FireServer(buffer.fromstring(buffers["base"]), { { "kick", 25, false, kickVec } })
-
-        ByteNetReliable:FireServer(
-            buffer.fromstring(buffers["base"]),
-            { { "skill1" } }
-        )
-    end)
+    end
 end)
 
 local cutsceneState = {
@@ -3637,41 +3676,36 @@ end)
 local mobile = maintab2:Folder("Mobile Silent Features.", Color3.fromRGB(24, 255, 228), true)
 mobile:Label("Mobile Silent Features: Silent Features Ported To Mobile.")
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Camera = workspace.CurrentCamera
-local UIS = game:GetService("UserInputService")
-local ByteNetReliable = ReplicatedStorage:WaitForChild("ByteNetReliable")
-
 local mobform = {
     gui = nil,
     active = false
 }
 
 local function trigger()
-    if UIS.MouseBehavior ~= Enum.MouseBehavior.LockCenter then return end
-    local lp = Players.LocalPlayer
+    if game:GetService("UserInputService").MouseBehavior ~= Enum.MouseBehavior.LockCenter then return end
+    local lp = game:GetService("Players").LocalPlayer
     local char = lp.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local hum = char and char:FindFirstChildOfClass("Humanoid")
     if not hrp or not hum then return end
 
     hum.AutoRotate = false
-    local camType = Camera.CameraType
-    local camSubject = Camera.CameraSubject
-    local camCF = Camera.CFrame
+    local cam = workspace.CurrentCamera
+    local camType = cam.CameraType
+    local camSubject = cam.CameraSubject
+    local camCF = cam.CFrame
     local flipped = camCF * CFrame.Angles(0, math.rad(180), 0)
 
-    Camera.CameraType = Enum.CameraType.Scriptable
-    Camera.CFrame = flipped
+    cam.CameraType = Enum.CameraType.Scriptable
+    cam.CFrame = flipped
 
     task.delay(0.1, function()
         if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
-            Camera.CameraSubject = lp.Character:FindFirstChildOfClass("Humanoid")
-            Camera.CameraType = Enum.CameraType.Custom
+            cam.CameraSubject = lp.Character:FindFirstChildOfClass("Humanoid")
+            cam.CameraType = Enum.CameraType.Custom
         else
-            Camera.CameraSubject = camSubject
-            Camera.CameraType = camType
+            cam.CameraSubject = camSubject
+            cam.CameraType = camType
         end
         if hum and hum.Parent then
             hum.AutoRotate = true
@@ -3688,8 +3722,8 @@ local function trigger()
     local dir = hrp.CFrame.LookVector
     local kickVec = Vector3.new(dir.X * 0.5, 1, dir.Z * 0.5)
 
-    remote:FireServer(buffer.fromstring(buffers["base"]), { { "kick", 25, false, kickVec } })
-    ByteNetReliable:FireServer(buffer.fromstring(buffers["base"]), { { "skill1" } })
+    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring(buffers["base"]), { { "kick", 25, false, kickVec } })
+    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(buffer.fromstring(buffers["base"]), { { "skill1" } })
 end
 
 local function makeDraggable(frame)
@@ -3711,7 +3745,7 @@ local function makeDraggable(frame)
             dragInput = input
         end
     end)
-    UIS.InputChanged:Connect(function(input)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
             frame.Position = UDim2.new(
@@ -3726,7 +3760,7 @@ end
 
 local function show()
     if mobform.gui then return end
-    local pg = Players.LocalPlayer:WaitForChild("PlayerGui")
+    local pg = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
     local sg = Instance.new("ScreenGui")
     sg.Name = "FormlessMobile"
     sg.ResetOnSpawn = false
@@ -3779,6 +3813,103 @@ mobile:Button("Auto Formless (Mobile Button.)", "Click Again To Remove Button.",
     end
 end)
 
+local airDribble = {
+    gui = nil,
+    active = false,
+    enabled = true
+}
+
+local function trigger()
+    if not airDribble.enabled then return end
+    local char = game:GetService("Players").LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://76587445975710"
+    hum:LoadAnimation(anim):Play()
+
+    local dir = hrp.CFrame.LookVector
+    local kickVec = Vector3.new(dir.X * 0.75, 0.65, dir.Z * 0.75)
+
+    game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable"):FireServer(
+        buffer.fromstring(buffers["base"]),
+        { { "kick", 28, false, kickVec } }
+    )
+end
+
+local function makeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+local function show()
+    if airDribble.gui then return end
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "AirDribbleMobile"
+    sg.ResetOnSpawn = false
+    sg.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    airDribble.gui = sg
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 100, 0, 100)
+    btn.Position = UDim2.new(0.5, -50, 0.5, -50)
+    btn.AnchorPoint = Vector2.new(0.5, 0.5)
+    btn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    btn.BorderSizePixel = 0
+    btn.Text = "Air Dribble"
+    btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 20
+    btn.AutoButtonColor = true
+    btn.Parent = sg
+
+    local cr = Instance.new("UICorner")
+    cr.CornerRadius = UDim.new(0, 8)
+    cr.Parent = btn
+
+    btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35) end)
+    btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(15, 15, 15) end)
+    btn.Activated:Connect(trigger)
+    makeDraggable(btn)
+end
+
+local function hide()
+    if airDribble.gui then
+        airDribble.gui:Destroy()
+        airDribble.gui = nil
+    end
+end
+
+mobile:Button("Air Dribble (Mobile Button)", "Click Again To Remove Button.", function()
+    airDribble.active = not airDribble.active
+    if airDribble.active then show() else hide() end
+end)
+
 funtab:Label("Celeron's Movesets, Recommend Using In Normal Servers.")
 
 funtab:Button("Goku Moveset (Req. Isagi)", "Click F4 To Disable.", function()
@@ -3803,7 +3934,18 @@ funtab:Button("Aizen Moveset (Req. Isagi)", "Click F4 To Disable.", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/aizen%20moveset",true))()
 end)
 
-funtab:Button("Ronaldo V3 (Req. Shidou)", "Click F4 To Disable.", function()
+funtab:Button("Loki Moveset (V2) (Req. Isagi.)", "Click F4 To Disable, Rejoin To Fix Isagi Music.", function()
+    local StarterGui = game:GetService("StarterGui")
+    StarterGui:SetCore("SendNotification", {
+        Title = "Credits",
+        Text = "brought to you by celeron!",
+        Duration = 5,
+        Button1 = "OK",
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/loki%20v2"))()
+end)
+
+funtab:Button("Ronaldo Moveset (V3) (Req. Shidou)", "Click F4 To Disable.", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/ghostofcelleron/Celeron/refs/heads/main/ronaldov3"))()
 end)
 
@@ -3820,6 +3962,17 @@ funtab:Button("Gojo Moveset (Req. Isagi.)", "Click F4 To Disable.", function()
     loadstring(game:HttpGet("https://pastebin.com/raw/TH8xDy9X"))()
 end)
 
+funtab:Button("Hugo Moveset (Early Access.) (Req. Kunigami)", "Click F4 To Disable, Rejoin To Fix Kunigami Music.", function()
+    local StarterGui = game:GetService("StarterGui")
+    StarterGui:SetCore("SendNotification", {
+        Title = "Credits",
+        Text = "brought to you by daffy!",
+        Duration = 5,
+        Button1 = "OK",
+    })
+loadstring(game:HttpGet("https://pastebin.com/raw/ND6yrPyk"))()
+end)
+
 funtab:Button("Naoya Moveset (Req. Sae)", "Click F4 To Disable.", function()
     local StarterGui = game:GetService("StarterGui")
     StarterGui:SetCore("SendNotification", {
@@ -3829,17 +3982,6 @@ funtab:Button("Naoya Moveset (Req. Sae)", "Click F4 To Disable.", function()
         Button1 = "OK",
     })
     loadstring(game:HttpGet("https://pastebin.com/raw/PDwm0ZcF"))()
-end)
-
-funtab:Button("Loki Moveset (Req. Isagi.)", "Rejoin To Disable.", function()
-    local StarterGui = game:GetService("StarterGui")
-    StarterGui:SetCore("SendNotification", {
-        Title = "Credits",
-        Text = "brought to you by daffy!",
-        Duration = 5,
-        Button1 = "OK",
-    })
-    loadstring(game:HttpGet("https://pastebin.com/raw/LbRRX7SK"))()
 end)
 
 funtab:Button("Lore Sae Moveset (Req. Sae.)", "Rejoin To Disable.", function()
@@ -3879,190 +4021,6 @@ end)
 
 misctab:Button("Upgrade UI (very cool actually)", function()
     loadstring(game:HttpGet("https://pastebin.com/raw/QDNYsgxQ"))()
-end)
-
-misctab:Button("Overtime Cinematics", function()
-    local vals = game.ReplicatedStorage.workspace
-    local timer = vals.timer
-    local ingame = vals.roundstart
-
-    local music1Isagi = game:GetService("ReplicatedStorage").Resources.isagi["isagi themeover"]
-    local music2Sae = game:GetService("ReplicatedStorage").Resources.sae["sae one shot match theme"]
-
-    local gui = Instance.new("ScreenGui")
-    gui.ScreenInsets = Enum.ScreenInsets.None
-    gui.Name = "overtimethang"
-    gui.Parent = game.Players.LocalPlayer.PlayerGui
-
-    local image = Instance.new("ImageLabel")
-    image.AnchorPoint = Vector2.new(0.5, 0.5)
-    image.Position = UDim2.new(0.5, 0,0.5, 0)
-    image.Size = UDim2.new(1.2, 0,1.2, 0)
-    image.Image = "rbxassetid://11030033771"
-    image.ImageTransparency = 0.8
-    image.BackgroundTransparency = 1
-    image.Parent = gui
-
-    local overtime = false
-
-    task.spawn(function()
-        while task.wait(0.05) do
-            image.Visible = overtime
-            
-            if overtime == true then
-                if game.Workspace.CurrentCamera.CameraType == Enum.CameraType.Custom then
-                    game.TweenService:Create(game.Workspace.CurrentCamera, TweenInfo.new(0.2), {FieldOfView = 100}):Play()
-                end
-                
-                if image.Rotation == 0 then
-                    image.Rotation = 180
-                else
-                    image.Rotation = 0
-                end
-            end
-        end
-    end)
-
-    timer.Changed:Connect(function()
-        if timer.Value == 0 and ingame.Value == true then
-            overtime = true
-            
-            repeat
-                music1Isagi:Play()
-                for i = 1, 50 do
-                    task.wait(1)
-                    if ingame.Value == false then
-                        break
-                    end
-                end
-                music2Sae:Play()
-                for i = 1, 58 do
-                    task.wait(1)
-                    if ingame.Value == false then
-                        break
-                    end
-                end
-            until ingame.Value == false
-            
-        elseif ingame.Value == false then
-            
-            overtime = false
-            music1Isagi:Stop()
-            music2Sae:Stop()
-            game.TweenService:Create(game.Workspace.CurrentCamera, TweenInfo.new(0.2), {FieldOfView = 70}):Play()
-            
-        end
-    end)
-end)
-
-local bgmusicState = {
-    enabled = false,
-    musicThread = nil,
-    awakenThread = nil,
-    sfx = nil
-}
-
-local music = {
-    "rbxassetid://126478006472705",
-    "rbxassetid://138210588552041",
-    "rbxassetid://137856744878500",
-    "rbxassetid://97581213878614",
-    "rbxassetid://71371939631022",
-    "rbxassetid://119592773299545",
-    "rbxassetid://134456641764445",
-    "rbxassetid://100509882059819",
-    "rbxassetid://128623853689708",
-    "rbxassetid://70979311703713",
-    "rbxassetid://92420662159372",
-    "rbxassetid://97837345641106",
-    "rbxassetid://102469310336986",
-    "rbxassetid://101851803743361",
-    "rbxassetid://88021645218929"
-}
-
-local function notifyBGMusic(title, text)
-    StarterGui:SetCore("SendNotification", {
-        Title = title,
-        Text = text,
-        Duration = 3
-    })
-end
-
-local function stopBGMusic()
-    bgmusicState.enabled = false
-
-    if bgmusicState.musicThread then
-        task.cancel(bgmusicState.musicThread)
-        bgmusicState.musicThread = nil
-    end
-
-    if bgmusicState.awakenThread then
-        task.cancel(bgmusicState.awakenThread)
-        bgmusicState.awakenThread = nil
-    end
-
-    if bgmusicState.sfx then
-        bgmusicState.sfx:Stop()
-        bgmusicState.sfx:Destroy()
-        bgmusicState.sfx = nil
-    end
-
-    notifyBGMusic("Background Music", "Disabled.")
-end
-
-local function startBGMusic()
-    bgmusicState.enabled = true
-
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hum = char:WaitForChild("Humanoid")
-
-    if game.SoundService:FindFirstChild("BGMusic") then
-        game.SoundService.BGMusic:Destroy()
-    end
-
-    bgmusicState.sfx = Instance.new("Sound")
-    bgmusicState.sfx.Name = "BGMusic"
-    bgmusicState.sfx.Volume = 1
-    bgmusicState.sfx.Looped = false
-    bgmusicState.sfx.SoundId = music[math.random(#music)]
-    bgmusicState.sfx.Parent = game.SoundService
-
-    bgmusicState.musicThread = task.spawn(function()
-        while bgmusicState.enabled and hum.Health > 0 do
-            bgmusicState.sfx:Play()
-            bgmusicState.sfx.Ended:Wait()
-            if not bgmusicState.enabled then break end
-            bgmusicState.sfx.SoundId = music[math.random(#music)]
-        end
-    end)
-
-    bgmusicState.awakenThread = task.spawn(function()
-        while bgmusicState.enabled and hum.Health > 0 do
-            task.wait(0.2)
-            local awaken = ReplicatedStorage.workspace.awaken.Value
-            if awaken ~= nil then
-                if bgmusicState.sfx.IsPlaying then
-                    bgmusicState.sfx:Pause()
-                end
-            else
-                if not bgmusicState.sfx.IsPlaying then
-                    bgmusicState.sfx:Resume()
-                end
-            end
-        end
-    end)
-
-    hum.Died:Connect(stopBGMusic)
-
-    notifyBGMusic("Background Music", "Enabled.")
-end
-
-misctab:Toggle("Background Music", function()
-    if bgmusicState.enabled then
-        stopBGMusic()
-    else
-        startBGMusic()
-    end
 end)
 
 misctab:Label("Emotes.")
